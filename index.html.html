@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Boneless Overwrap Dispatch</title>
+  <style>
+    :root {
+      --blue: #0b4f8a;
+      --blue-2: #1f6fb3;
+      --gold: #d9b24c;
+      --bg: #f5f7fa;
+      --card: #ffffff;
+      --text: #18222d;
+      --muted: #66788a;
+      --good: #1f8f4e;
+      --warn: #c68100;
+      --bad: #ba3b2e;
+      --border: #d9e2ec;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .topbar {
+      background: linear-gradient(135deg, var(--blue), var(--blue-2));
+      color: white;
+      padding: 18px 22px;
+      box-shadow: 0 4px 16px rgba(0,0,0,.12);
+    }
+    .topbar h1 {
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: .2px;
+    }
+    .topbar p {
+      margin: 6px 0 0;
+      opacity: .92;
+      font-size: 14px;
+    }
+    .wrap {
+      max-width: 1450px;
+      margin: 18px auto 32px;
+      padding: 0 16px;
+    }
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 6px 20px rgba(15, 23, 42, .06);
+    }
+    .card h2, .card h3 {
+      margin: 0 0 12px;
+    }
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .section-title small { color: var(--muted); }
+    .fields {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0,1fr));
+      gap: 12px;
+    }
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+    }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid #c7d2de;
+      background: white;
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+    textarea { min-height: 76px; resize: vertical; }
+    select[multiple] { min-height: 140px; }
+    .pill-row {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0,1fr));
+      gap: 10px;
+    }
+    .pill {
+      border-radius: 14px;
+      padding: 12px;
+      color: white;
+      font-weight: 700;
+    }
+    .pill span { display: block; font-size: 12px; opacity: .9; font-weight: 600; }
+    .pill strong { display: block; font-size: 26px; margin-top: 4px; }
+    .present { background: var(--good); }
+    .absence { background: var(--bad); }
+    .loa { background: #5b5fc7; }
+    .vacation { background: #008b8b; }
+    .fmla { background: #7a52b3; }
+    .term { background: #6c757d; }
+    .roster {
+      max-height: 560px;
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #e6edf4;
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+    }
+    thead th {
+      position: sticky;
+      top: 0;
+      background: #eef4fa;
+      z-index: 1;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      color: var(--muted);
+    }
+    .line-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 16px;
+    }
+    .line-card {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      background: #fbfdff;
+    }
+    .line-card h3 {
+      margin: 0 0 10px;
+      color: var(--blue);
+    }
+    .line-meta {
+      display: grid;
+      grid-template-columns: 1.2fr .7fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .primary { background: var(--blue); color: white; }
+    .secondary { background: white; color: var(--blue); border: 1px solid var(--blue); }
+    .gold { background: var(--gold); color: #2c2200; }
+    .helper {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 8px;
+    }
+    .linkbox {
+      background: #f1f7ff;
+      border: 1px dashed #9fc0df;
+      padding: 12px;
+      border-radius: 12px;
+      word-break: break-all;
+      font-size: 13px;
+    }
+    .status-good { color: var(--good); font-weight: 700; }
+    .status-warn { color: var(--warn); font-weight: 700; }
+    .status-bad { color: var(--bad); font-weight: 700; }
+    .board-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .board-stamp {
+      padding: 10px 14px;
+      background: #eef4fa;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      font-size: 14px;
+    }
+    .alerts li { margin-bottom: 8px; }
+    .badge {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #eef4fa;
+      color: var(--blue);
+    }
+    .hidden { display: none !important; }
+    .tiny { font-size: 12px; color: var(--muted); }
+    @media (max-width: 980px) {
+      .grid-3, .grid-2, .line-grid, .fields, .pill-row { grid-template-columns: 1fr; }
+      .line-meta { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <h1>Boneless Overwrap Attendance & Dispatch</h1>
+    <p>Supervisor input form and shareable staffing board for 9 lines plus Saddle Pack conveyor.</p>
+  </div>
+
+  <div class="wrap" id="formView">
+    <div class="card">
+      <div class="section-title">
+        <div>
+          <h2>Shift Information</h2>
+          <small>Fill this out, then generate a read-only board link to share in the chat group.</small>
+        </div>
+        <span class="badge">Manual Dispatch</span>
+      </div>
+      <div class="fields">
+        <div>
+          <label for="shiftDate">Date</label>
+          <input id="shiftDate" type="date" />
+        </div>
+        <div>
+          <label for="shiftName">Shift</label>
+          <input id="shiftName" type="text" placeholder="Night Shift" value="Night Shift" />
+        </div>
+        <div>
+          <label for="supervisor">Supervisor</label>
+          <input id="supervisor" type="text" placeholder="Fabrice Mukendi" value="Fabrice Mukendi" />
+        </div>
+        <div>
+          <label for="changeoverTime">Film Changeover Time</label>
+          <input id="changeoverTime" type="text" placeholder="9:30 PM" />
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">
+        <div>
+          <h2>Attendance Summary</h2>
+          <small>Counts update automatically from the roster below.</small>
+        </div>
+      </div>
+      <div class="pill-row">
+        <div class="pill present"><span>Present</span><strong id="countPresent">0</strong></div>
+        <div class="pill absence"><span>Absence</span><strong id="countAbsent">0</strong></div>
+        <div class="pill loa"><span>LOA</span><strong id="countLOA">0</strong></div>
+        <div class="pill vacation"><span>Vacation</span><strong id="countVacation">0</strong></div>
+        <div class="pill fmla"><span>FMLA</span><strong id="countFMLA">0</strong></div>
+        <div class="pill term"><span>Term</span><strong id="countTerm">0</strong></div>
+      </div>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="section-title">
+          <div>
+            <h2>Team Member Attendance Roster</h2>
+            <small>Preloaded from your uploaded Boneless Overwrap team list.</small>
+          </div>
+          <span class="badge" id="tmTotal">0 TMs</span>
+        </div>
+        <div class="roster">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:70px">#</th>
+                <th>Name</th>
+                <th style="width:180px">Status</th>
+              </tr>
+            </thead>
+            <tbody id="rosterBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">
+          <div>
+            <h2>Line Dispatch</h2>
+            <small>SKU per line, how many are needed, and who is assigned.</small>
+          </div>
+        </div>
+        <div class="line-grid" id="lineGrid"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">
+        <div>
+          <h2>Generate Shareable Dispatch Board</h2>
+          <small>This creates a read-only second link you can paste into the group chat.</small>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="primary" id="generateBtn">Generate Board Link</button>
+        <button class="secondary" id="openBtn">Open Board</button>
+        <button class="gold" id="copyBtn">Copy Link</button>
+      </div>
+      <div class="helper">The board link includes the current snapshot of attendance and dispatch. Generate it again anytime staffing changes.</div>
+      <div class="linkbox" id="outputLink">No board link generated yet.</div>
+    </div>
+  </div>
+
+  <div class="wrap hidden" id="boardView">
+    <div class="card">
+      <div class="board-header">
+        <div>
+          <h2 style="margin:0 0 6px">Boneless Overwrap Live Dispatch Board</h2>
+          <div class="tiny">Read-only share view for coworkers and upper management</div>
+        </div>
+        <div class="board-stamp" id="boardStamp"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Attendance Summary</h3>
+      <div class="pill-row" id="boardPills"></div>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <h3>Line Staffing Status</h3>
+        <div class="roster" style="max-height:none; overflow:visible;">
+          <table>
+            <thead>
+              <tr>
+                <th>Area</th>
+                <th>SKU Running</th>
+                <th>Needed</th>
+                <th>Assigned</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="boardLines"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Shift Details</h3>
+        <table>
+          <tbody id="boardMeta"></tbody>
+        </table>
+        <h3 style="margin-top:18px;">Alerts</h3>
+        <ul class="alerts" id="boardAlerts"></ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const teamMembers = [
+      "Aline Nankiza","Ayamba Wabisama","Bawelwa Mawazo","Marie Testamar","Tu Tran","Brian Shungu",
+      "Abraham Fleurival","Frantzy Bazile","Anouse Mentor","Tamirat Gechecho","Fenel Fiefie",
+      "Hannibal Tesfamichael","Abdiaziz Abdikadir","Pleh Meh","Evody Pithon","Jamal Osman",
+      "Rashid Ahmed Gora Miya","Adar Muse","Nourto Youssouf","Francisco Bautista","Gerry Tanzey",
+      "Aways H. Jimcaale","Seada Adrahman","Desmond Branch","John Kuaya","Louise Pobi Tshitende",
+      "Joao Kathola","Feguens Francin","Abera Nuneshe","Buldad Alcero","Felix Blount",
+      "Maria Ramos Olvera","John Kiertekles","Jacque Antoine","Eric Ndaosiango","Sipriana Velasquez",
+      "Anthony Gayle","Guillaume Dufrene","Bagner Velasquez","Ivan Torres","Saint Victor Pierre"
+    ];
+
+    const lineNames = [
+      "Line 1","Line 2","Line 3","Line 4","Line 5",
+      "Line 6","Line 7","Line 8","Line 10","Saddle Pack Conveyor"
+    ];
+
+    const statusOptions = [
+      { code: 'P', label: 'Present' },
+      { code: 'A', label: 'Absent' },
+      { code: 'L', label: 'LOA' },
+      { code: 'V', label: 'Vacation' },
+      { code: 'F', label: 'FMLA' },
+      { code: 'T', label: 'Term' }
+    ];
+
+    const statusMap = Object.fromEntries(statusOptions.map(s => [s.code, s.label]));
+    const formView = document.getElementById('formView');
+    const boardView = document.getElementById('boardView');
+    const rosterBody = document.getElementById('rosterBody');
+    const lineGrid = document.getElementById('lineGrid');
+    const outputLink = document.getElementById('outputLink');
+    const tmTotal = document.getElementById('tmTotal');
+
+    function setToday() {
+      const d = new Date();
+      const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0,10);
+      document.getElementById('shiftDate').value = local;
+    }
+
+    function renderRoster() {
+      tmTotal.textContent = `${teamMembers.length} TMs`;
+      rosterBody.innerHTML = teamMembers.map((name, idx) => `
+        <tr>
+          <td>${idx + 1}</td>
+          <td>${name}</td>
+          <td>
+            <select data-roster-index="${idx}" class="attendance-select">
+              ${statusOptions.map(opt => `<option value="${opt.code}" ${opt.code === 'P' ? 'selected' : ''}>${opt.label}</option>`).join('')}
+            </select>
+          </td>
+        </tr>
+      `).join('');
+      rosterBody.addEventListener('change', (e) => {
+        if (e.target.classList.contains('attendance-select')) {
+          updateSummary();
+          populateLineSelectors();
+        }
+      });
+    }
+
+    function renderLines() {
+      lineGrid.innerHTML = lineNames.map((line, idx) => `
+        <div class="line-card">
+          <h3>${line}</h3>
+          <div class="line-meta">
+            <div>
+              <label>SKU Running</label>
+              <input type="text" data-line="${idx}" data-field="sku" placeholder="Enter SKU" />
+            </div>
+            <div>
+              <label>Needed</label>
+              <input type="number" min="0" data-line="${idx}" data-field="needed" placeholder="0" />
+            </div>
+          </div>
+          <div>
+            <label>Assigned Team Members</label>
+            <select multiple data-line="${idx}" data-field="assigned" class="line-assigned"></select>
+            <div class="helper"><span id="assignedCount-${idx}">0</span> assigned</div>
+          </div>
+          <div style="margin-top:10px;">
+            <label>Notes</label>
+            <textarea data-line="${idx}" data-field="notes" placeholder="Optional notes"></textarea>
+          </div>
+        </div>
+      `).join('');
+
+      lineGrid.addEventListener('change', (e) => {
+        const select = e.target;
+        if (select.classList.contains('line-assigned')) {
+          const idx = select.dataset.line;
+          document.getElementById(`assignedCount-${idx}`).textContent = select.selectedOptions.length;
+        }
+      });
+    }
+
+    function getAttendanceCodes() {
+      return [...document.querySelectorAll('.attendance-select')].map(el => el.value);
+    }
+
+    function updateSummary() {
+      const codes = getAttendanceCodes();
+      const counts = { P: 0, A: 0, L: 0, V: 0, F: 0, T: 0 };
+      codes.forEach(c => counts[c]++);
+      document.getElementById('countPresent').textContent = counts.P;
+      document.getElementById('countAbsent').textContent = counts.A;
+      document.getElementById('countLOA').textContent = counts.L;
+      document.getElementById('countVacation').textContent = counts.V;
+      document.getElementById('countFMLA').textContent = counts.F;
+      document.getElementById('countTerm').textContent = counts.T;
+    }
+
+    function populateLineSelectors() {
+      const codes = getAttendanceCodes();
+      const presentIndexes = teamMembers
+        .map((name, idx) => ({ idx, name, code: codes[idx] }))
+        .filter(row => row.code === 'P');
+
+      document.querySelectorAll('.line-assigned').forEach(select => {
+        const selected = [...select.selectedOptions].map(opt => Number(opt.value));
+        select.innerHTML = presentIndexes.map(person => `
+          <option value="${person.idx}" ${selected.includes(person.idx) ? 'selected' : ''}>${person.name}</option>
+        `).join('');
+        const idx = select.dataset.line;
+        document.getElementById(`assignedCount-${idx}`).textContent = select.selectedOptions.length;
+      });
+    }
+
+    function collectData() {
+      const attendance = getAttendanceCodes().join('');
+      const lines = lineNames.map((_, idx) => {
+        const sku = document.querySelector(`[data-line="${idx}"][data-field="sku"]`).value.trim();
+        const needed = Number(document.querySelector(`[data-line="${idx}"][data-field="needed"]`).value || 0);
+        const assignedSelect = document.querySelector(`select[data-line="${idx}"][data-field="assigned"]`);
+        const assigned = [...assignedSelect.selectedOptions].map(opt => Number(opt.value));
+        const notes = document.querySelector(`[data-line="${idx}"][data-field="notes"]`).value.trim();
+        return [sku, needed, assigned, notes];
+      });
+
+      return {
+        d: document.getElementById('shiftDate').value,
+        sh: document.getElementById('shiftName').value.trim(),
+        sp: document.getElementById('supervisor').value.trim(),
+        ct: document.getElementById('changeoverTime').value.trim(),
+        a: attendance,
+        l: lines
+      };
+    }
+
+    function encodeData(data) {
+      return btoa(unescape(encodeURIComponent(JSON.stringify(data))))
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/g, '');
+    }
+
+    function decodeData(str) {
+      const normalized = str.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = normalized + '='.repeat((4 - normalized.length % 4) % 4);
+      return JSON.parse(decodeURIComponent(escape(atob(padded))));
+    }
+
+    function getCounts(attendanceString) {
+      const counts = { P: 0, A: 0, L: 0, V: 0, F: 0, T: 0 };
+      attendanceString.split('').forEach(c => counts[c] = (counts[c] || 0) + 1);
+      return counts;
+    }
+
+    function lineStatus(needed, assigned) {
+      if (needed === 0 && assigned === 0) return { label: 'Not staffed', className: 'status-warn' };
+      if (assigned === needed) return { label: 'Balanced', className: 'status-good' };
+      if (assigned > needed) return { label: `Over by ${assigned - needed}`, className: 'status-warn' };
+      return { label: `Short by ${needed - assigned}`, className: 'status-bad' };
+    }
+
+    function generateBoardURL() {
+      const data = collectData();
+      const encoded = encodeData(data);
+      const url = `${window.location.origin}${window.location.pathname}?board=${encoded}`;
+      outputLink.textContent = url;
+      return url;
+    }
+
+    function renderBoard(data) {
+      formView.classList.add('hidden');
+      boardView.classList.remove('hidden');
+
+      const counts = getCounts(data.a);
+      document.getElementById('boardStamp').textContent = `${data.sh || 'Shift'} • ${data.d || 'No date'} • Supervisor: ${data.sp || 'N/A'}`;
+
+      const pills = [
+        ['Present', counts.P, 'present'],
+        ['Absence', counts.A, 'absence'],
+        ['LOA', counts.L, 'loa'],
+        ['Vacation', counts.V, 'vacation'],
+        ['FMLA', counts.F, 'fmla'],
+        ['Term', counts.T, 'term']
+      ];
+      document.getElementById('boardPills').innerHTML = pills.map(([label, value, cls]) => `
+        <div class="pill ${cls}"><span>${label}</span><strong>${value || 0}</strong></div>
+      `).join('');
+
+      const linesHtml = [];
+      const alerts = [];
+      let totalNeeded = 0;
+      let totalAssigned = 0;
+
+      data.l.forEach((line, idx) => {
+        const [sku, needed, assignedIndexes, notes] = line;
+        const assignedNames = (assignedIndexes || []).map(i => teamMembers[i]).filter(Boolean);
+        const status = lineStatus(Number(needed || 0), assignedNames.length);
+        totalNeeded += Number(needed || 0);
+        totalAssigned += assignedNames.length;
+        if (status.className !== 'status-good') {
+          alerts.push(`${lineNames[idx]}: ${status.label}${sku ? ` • SKU ${sku}` : ''}`);
+        }
+        if (notes) alerts.push(`${lineNames[idx]} note: ${notes}`);
+        linesHtml.push(`
+          <tr>
+            <td><strong>${lineNames[idx]}</strong></td>
+            <td>${sku || '—'}</td>
+            <td>${needed || 0}</td>
+            <td>${assignedNames.length}${assignedNames.length ? `<div class="tiny">${assignedNames.join(', ')}</div>` : ''}</td>
+            <td class="${status.className}">${status.label}</td>
+          </tr>
+        `);
+      });
+      document.getElementById('boardLines').innerHTML = linesHtml.join('');
+
+      document.getElementById('boardMeta').innerHTML = `
+        <tr><th style="width:180px">Shift</th><td>${data.sh || '—'}</td></tr>
+        <tr><th>Supervisor</th><td>${data.sp || '—'}</td></tr>
+        <tr><th>Date</th><td>${data.d || '—'}</td></tr>
+        <tr><th>Film Changeover Time</th><td>${data.ct || '—'}</td></tr>
+        <tr><th>Total Present</th><td>${counts.P || 0}</td></tr>
+        <tr><th>Total Needed</th><td>${totalNeeded}</td></tr>
+        <tr><th>Total Assigned</th><td>${totalAssigned}</td></tr>
+      `;
+
+      if (!alerts.length) alerts.push('No shortages or special alerts recorded.');
+      document.getElementById('boardAlerts').innerHTML = alerts.map(a => `<li>${a}</li>`).join('');
+    }
+
+    function initButtons() {
+      document.getElementById('generateBtn').addEventListener('click', generateBoardURL);
+      document.getElementById('openBtn').addEventListener('click', () => {
+        const url = generateBoardURL();
+        window.open(url, '_blank');
+      });
+      document.getElementById('copyBtn').addEventListener('click', async () => {
+        const url = generateBoardURL();
+        try {
+          await navigator.clipboard.writeText(url);
+          outputLink.textContent = `Copied: ${url}`;
+        } catch {
+          outputLink.textContent = `Copy failed. Manually copy this link: ${url}`;
+        }
+      });
+    }
+
+    function init() {
+      const params = new URLSearchParams(window.location.search);
+      const boardParam = params.get('board');
+      if (boardParam) {
+        try {
+          const data = decodeData(boardParam);
+          renderBoard(data);
+          return;
+        } catch (err) {
+          console.error(err);
+          alert('The board link could not be opened.');
+        }
+      }
+
+      setToday();
+      renderRoster();
+      renderLines();
+      updateSummary();
+      populateLineSelectors();
+      initButtons();
+    }
+
+    init();
+  </script>
+</body>
+</html>
